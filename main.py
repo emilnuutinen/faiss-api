@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
+from pydantic import BaseModel
 import faiss
 import mmap_index
 import os
 import sys
 import transformers
-
 import argparse
+
+
+class Query(BaseModel):
+    text: str
+    limit: int
 
 
 class IDemo:
@@ -64,27 +69,25 @@ mmap_file = os.environ.get(
 faiss_index = os.environ.get(
     "FAISS_INDEX", "data/faiss_index_filled_sbert.faiss")
 
-nn_qry = IDemoSBert(
-    tokenizer, model, faiss_index, mmap_file)
+nn_qry = IDemoSBert(tokenizer, model, faiss_index, mmap_file)
 nn_qry.knn(["Minulla on koira"])
 print("Done loading", file=sys.stderr, flush=True)
 
 
 @app.get("/")
 def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/{query}")
+def result(query):
     global nn_qry
-    inpsentence = "women must have equal rights and education as men"
-    print("INP", inpsentence, file=sys.stderr, flush=True)
-    res = nn_qry.knn([inpsentence])
+    res = nn_qry.knn([query])
     nearest = []
     for sent, hits in res:
         for score, h in hits:
             nearest.append(h)
-
-    for obj in nearest:
-        print(obj)
-        print("\n")
-    return {"Hello": "World"}
+    return nearest
 
 
 if __name__ == "__main__":
