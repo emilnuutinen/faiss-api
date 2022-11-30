@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
 from pydantic import BaseModel
+import argparse
 import faiss
+import json
 import mmap_index
 import os
 import sys
 import transformers
-import argparse
 
 
 class Query(BaseModel):
@@ -60,18 +61,12 @@ class IDemoSBert(IDemo):
 app = FastAPI()
 
 
-tokenizer = os.environ.get(
-    "TOKENIZER", "sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
-model = os.environ.get(
-    "MODEL", "sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
-mmap_file = os.environ.get(
-    "MMAP_FILE", "data/all_data_pos_uniq")
-faiss_index = os.environ.get(
-    "FAISS_INDEX", "data/faiss_index_filled_sbert.faiss")
+tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+mmap_file = "data/all_data_pos_uniq"
+faiss_index = "data/faiss_index_filled_sbert.faiss"
 
 nn_qry = IDemoSBert(tokenizer, model, faiss_index, mmap_file)
-nn_qry.knn(["Minulla on koira"])
-print("Done loading", file=sys.stderr, flush=True)
 
 
 @app.get("/")
@@ -83,28 +78,8 @@ def read_root():
 def result(query):
     global nn_qry
     res = nn_qry.knn([query])
-    nearest = []
+    results = []
     for sent, hits in res:
         for score, h in hits:
-            nearest.append(h)
-    return nearest
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--faiss-index", help="FAISS index file")
-    parser.add_argument("--model", help="Path of the sbert model to use")
-    parser.add_argument("--tokenizer",
-                        help="Path of the sbert tokenizer to use")
-    parser.add_argument("--mmap-idx", help="Mmap index with the sentence")
-    parser.add_argument("--gpu", default=False,
-                        action="store_true", help="GPU?")
-    args = parser.parse_args()
-
-    idemo = IDemoSBert(args.tokenizer, args.model,
-                       args.faiss_index, args.mmap_idx, args.gpu)
-    res = idemo.knn(["Turussa on kivaa asua, tykkään tästä paikasta."])
-    for sent, hits in res:
-        print(f"Qry: {sent}")
-        for score, h in hits:
-            print(f"   Hit: {h}")
+            results.append(json.loads(h))
+    return results
