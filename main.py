@@ -1,11 +1,9 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
 from pydantic import BaseModel
-import argparse
 import faiss
 import json
 import mmap_index
-import os
 import sys
 import transformers
 
@@ -15,7 +13,7 @@ class Query(BaseModel):
     limit: int
 
 
-class IDemo:
+class Config:
 
     def __init__(self, faiss_index, mmap_file, gpu=False):
         self.index = faiss.read_index(faiss_index)
@@ -40,7 +38,7 @@ class IDemo:
         return res
 
 
-class IDemoSBert(IDemo):
+class Embedding(Config):
 
     def __init__(self, tokenizer, model, faiss_index, mmap_file, gpu=False):
         super().__init__(faiss_index, mmap_file, gpu)
@@ -60,13 +58,14 @@ class IDemoSBert(IDemo):
 
 app = FastAPI()
 
-
 tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 mmap_file = "data/all_data_pos_uniq"
 faiss_index = "data/faiss_index_filled_sbert.faiss"
 
-nn_qry = IDemoSBert(tokenizer, model, faiss_index, mmap_file)
+search = Embedding(tokenizer, model, faiss_index, mmap_file)
+search.knn(["Startup"])  # Initialize the search engine
+print("Done loading", file=sys.stderr, flush=True)
 
 
 @app.get("/")
@@ -76,8 +75,7 @@ def read_root():
 
 @app.get("/{query}")
 def result(query):
-    global nn_qry
-    res = nn_qry.knn([query])
+    res = search.knn([query])
     results = []
     for sent, hits in res:
         for score, h in hits:
