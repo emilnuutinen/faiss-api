@@ -15,16 +15,24 @@ class Query(BaseModel):
 
 class Config:
 
-    def __init__(self, faiss_index, mmap_file, gpu=False):
+    def __init__(self, tokenizer, model, faiss_index, mmap, limit, gpu=False):
         self.index = faiss.read_index(faiss_index)
         self.index.nprobe = 12
+        tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
+        self.model = SentenceTransformer(model).eval()
         if gpu:
             res = faiss.StandardGpuResources()
             self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
-        self.mmidx = mmap_index.Qry(mmap_file)
+            self.model = self.model.cuda()
+        self.mmidx = mmap_index.Qry(mmap)
 
     def embed(self, sentlist):
-        raise NotImplementedError("You gotta define embed() in a subclass")
+        print("Starting encoding", file=sys.stderr, flush=True)
+        emb = self.model.encode(sentlist)
+        print("Starting index search", file=sys.stderr, flush=True)
+        W, I = self.index.search(emb, limit)
+        print("Done index search", file=sys.stderr, flush=True)
+        return W, I
 
     def knn(self, sentlist):
         res = []
@@ -38,32 +46,15 @@ class Config:
         return res
 
 
-class Embedding(Config):
-
-    def __init__(self, tokenizer, model, faiss_index, mmap_file, gpu=False):
-        super().__init__(faiss_index, mmap_file, gpu)
-        tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
-        self.model = SentenceTransformer(model).eval()
-        if gpu:
-            self.model = self.model.cuda()
-
-    def embed(self, sentlist):
-        print("Starting encoding", file=sys.stderr, flush=True)
-        emb = self.model.encode(sentlist)
-        print("Starting index search", file=sys.stderr, flush=True)
-        W, I = self.index.search(emb, 10)
-        print("Done index search", file=sys.stderr, flush=True)
-        return W, I
-
-
 app = FastAPI()
 
 tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-mmap_file = "data/all_data_pos_uniq"
+mmap = "data/all_data_pos_uniq"
 faiss_index = "data/faiss_index_filled_sbert.faiss"
+limit = 15
 
-search = Embedding(tokenizer, model, faiss_index, mmap_file)
+search = Config(tokenizer, model, faiss_index, mmap, limit)
 search.knn(["Startup"])  # Initialize the search engine
 print("Done loading", file=sys.stderr, flush=True)
 
