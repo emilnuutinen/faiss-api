@@ -1,16 +1,10 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
-from pydantic import BaseModel
 import faiss
 import json
 import mmap_index
 import sys
 import transformers
-
-
-class Query(BaseModel):
-    text: str
-    limit: int
 
 
 class Config:
