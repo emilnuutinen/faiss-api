@@ -64,5 +64,6 @@ def result(query):
     results = []
     for sent, hits in res:
         for score, h in hits:
+            print(round(1-(score**2)/100, 3))
             results.append(json.loads(h))
     return results
