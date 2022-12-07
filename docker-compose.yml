@@ -8,6 +8,6 @@ services:
       - "8789:8789"
     environment:
       - MMAP="/mnt/ssd/ecco_faiss/data/all_data_pos_uniq"
-      - FAISS="/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
+      - FAISS_INDEX="/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
       - TOKENIZER="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-        MODEL="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+      - MODEL="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
