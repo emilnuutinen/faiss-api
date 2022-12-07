@@ -64,6 +64,10 @@ def result(query):
     results = []
     for sent, hits in res:
         for score, h in hits:
-            print(round(1-(score**2)/100, 3))
-            results.append(json.loads(h))
+            score = round(1-(score**2)/100, 3)
+            certainty = {"certainty": score}
+            result = json.loads(h)
+            result["text"] = result.pop("string")
+            result.update(certainty)
+            results.append(result)
     return results
