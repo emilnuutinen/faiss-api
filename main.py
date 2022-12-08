@@ -3,7 +3,6 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import json
 import mmap_index
-import os
 import sys
 import transformers
 
@@ -43,10 +42,10 @@ class Config:
 
 app = FastAPI()
 
-tokenizer = os.environ.get('TOKENIZER'),
-model = os.environ.get('MODEL'),
-mmap = os.environ.get('MMAP'),
-faiss_index = os.environ.get('FAISS_INDEX'),
+tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+mmap = "/mnt/ssd/ecco_faiss/data/all_data_pos_uniq"
+faiss_index = "/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
 limit = 15
 
 search = Config(tokenizer, model, faiss_index, mmap, limit)

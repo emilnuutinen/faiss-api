@@ -4,10 +4,8 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8789 --proxy-headers
     volumes:
       - .:/code
+      - type: bind
+        source: /mnt/ssd/ecco_faiss/data
+        target: /mnt/ssd/ecco_faiss/data
     ports:
       - "8789:8789"
-    environment:
-      - MMAP="/mnt/ssd/ecco_faiss/data/all_data_pos_uniq"
-      - FAISS_INDEX="/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
-      - TOKENIZER="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-      - MODEL="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
