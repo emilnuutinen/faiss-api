@@ -4,7 +4,7 @@ while True:
     print()
     query = input('Your query: ')
 
-    results = requests.get(f'http://127.0.0.1:8789/{query}')
+    results = requests.get(f'http://epsilon-it.utu.fi/ecco-api/{query}')
     for result in results.json():
         print()
         print(f'Book: {result["id"]}')
