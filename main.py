@@ -67,7 +67,6 @@ def result(query):
             score = round(1-(score**2)/100, 3)
             certainty = {"certainty": score}
             result = json.loads(h)
-            result["text"] = result.pop("string")
             result.update(certainty)
             results.append(result)
     return results
