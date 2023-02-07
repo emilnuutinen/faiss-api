@@ -9,7 +9,7 @@ import transformers
 
 class Config:
 
-    def __init__(self, tokenizer, model, faiss_index, mmap, limit, gpu=False):
+    def __init__(self, tokenizer, model, faiss_index, mmap, gpu=False):
         self.index = faiss.read_index(faiss_index)
         self.index.nprobe = 12
         tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
@@ -20,7 +20,7 @@ class Config:
             self.model = self.model.cuda()
         self.mmidx = mmap_index.Qry(mmap)
 
-    def embed(self, sentlist):
+    def embed(self, sentlist, limit=15):
         print("Starting encoding", file=sys.stderr, flush=True)
         emb = self.model.encode(sentlist)
         print("Starting index search", file=sys.stderr, flush=True)
@@ -28,9 +28,9 @@ class Config:
         print("Done index search", file=sys.stderr, flush=True)
         return W, I
 
-    def knn(self, sentlist):
+    def knn(self, sentlist, limit=15):
         res = []
-        W, I = self.embed(sentlist)
+        W, I = self.embed(sentlist, limit)
         for sent, ws, nns in zip(sentlist, W, I):
             sent_res = []
             for w, nn in zip(ws, nns):
@@ -44,12 +44,11 @@ app = FastAPI()
 
 tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-mmap = "/mnt/ssd/ecco_faiss/data/all_data_pos_uniq"
+mmap = "/mnt/ssd/ecco_faiss/data/mmap/all_data_pos_uniq"
 faiss_index = "/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
-limit = 15
 
-search = Config(tokenizer, model, faiss_index, mmap, limit)
-search.knn(["Startup"])  # Initialize the search engine
+search = Config(tokenizer, model, faiss_index, mmap)
+search.knn(["Startup"], 15)  # Initialize the index
 print("Done loading", file=sys.stderr, flush=True)
 
 
@@ -59,8 +58,22 @@ def read_root():
 
 
 @app.get("/{query}")
-def result(query):
-    res = search.knn([query])
+def base_search(query, limit=15):
+    res = search.knn([query], int(limit))
+    results = []
+    for sent, hits in res:
+        for score, h in hits:
+            score = round(1-(score**2)/100, 3)
+            certainty = {"certainty": score}
+            result = json.loads(h)
+            result.update(certainty)
+            results.append(result)
+    return results
+
+
+@app.get("/v2/l={limit}&q={query}")
+def get_results(query, limit=15):
+    res = search.knn([query], int(limit))
     results = []
     for sent, hits in res:
         for score, h in hits:
