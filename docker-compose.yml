@@ -1,11 +1,14 @@
 services:
   api:
     build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8789 --proxy-headers
+    command: uvicorn main:app --host 0.0.0.0 --port 8791 --proxy-headers
     volumes:
       - .:/code
       - type: bind
         source: /mnt/ssd/ecco_faiss/data
         target: /mnt/ssd/ecco_faiss/data
+      - type: bind
+        source: /mnt/ssd/ecco_faiss/data/mmap
+        target: /mnt/ssd/ecco_faiss/data/mmap
     ports:
-      - "8789:8789"
+      - "8791:8791"
