@@ -66,6 +66,7 @@ def base_search(query, limit=15):
             score = round(1-(score**2)/100, 3)
             certainty = {"certainty": score}
             result = json.loads(h)
+            result["id"] = result["id"].replace(".headed", "")
             result.update(certainty)
             results.append(result)
     return results
@@ -80,6 +81,7 @@ def get_results(query, limit=15):
             score = round(1-(score**2)/100, 3)
             certainty = {"certainty": score}
             result = json.loads(h)
+            result["id"] = result["id"].replace(".headed", "")
             result.update(certainty)
             results.append(result)
     return results
