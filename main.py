@@ -44,8 +44,8 @@ app = FastAPI()
 
 tokenizer = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 model = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-mmap = "/mnt/ssd/ecco_faiss/data/mmap/all_data_pos_uniq"
-faiss_index = "/mnt/ssd/ecco_faiss/data/faiss_index_filled_sbert.faiss"
+mmap = "/mnt/ssd/faiss_data/mmap/all_data_pos_uniq"
+faiss_index = "/mnt/ssd/faiss_data/faiss_index_filled_sbert.faiss"
 
 search = Config(tokenizer, model, faiss_index, mmap)
 search.knn(["Startup"], 15)  # Initialize the index
