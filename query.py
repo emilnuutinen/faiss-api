@@ -1,6 +1,6 @@
 import requests
 
-limit = 200000
+limit = 20
 
 while True:
     print()
