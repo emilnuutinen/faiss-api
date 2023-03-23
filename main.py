@@ -58,7 +58,7 @@ def read_root():
 
 
 @app.get("/{query}")
-def base_search(query, limit=15):
+def base_search(query: str, limit=15):
     res = search.knn([query], int(limit))
     results = []
     for sent, hits in res:
@@ -72,10 +72,9 @@ def base_search(query, limit=15):
     return results
 
 
-@app.get("/v2/l={limit}&q={query}")
-def get_results(query, limit=15):
-    safe_query = f'"?{query}"'  # Allow slashes in query
-    res = search.knn([safe_query], int(limit))
+@app.get("/v2/?l={limit}&q={query}")
+def get_results(query: str, limit: int = 15):
+    res = search.knn([query], int(limit))
     results = []
     for sent, hits in res:
         for score, h in hits:
