@@ -72,7 +72,7 @@ def base_search(query, limit=15):
     return results
 
 
-@app.get("/v2/l={limit}&q={query}")
+@app.get('/v2/l={limit}&q="?{query}"')
 def get_results(query, limit=15):
     res = search.knn([query], int(limit))
     results = []
