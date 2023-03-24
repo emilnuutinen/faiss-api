@@ -72,9 +72,24 @@ def base_search(query: str, limit=15):
     return results
 
 
-@app.get("/v2/?l={limit}&q={query}")
-def get_results(query: str, limit: int = 15):
-    res = search.knn([query], int(limit))
+@app.get("/v2/l={limit}&q={query}")
+async def get_results(query: str, limit: int = 15):
+    res = search.knn([query], limit)
+    results = []
+    for sent, hits in res:
+        for score, h in hits:
+            score = round(1-(score**2)/100, 3)
+            certainty = {"certainty": score}
+            result = json.loads(h)
+            result["id"] = result["id"].replace(".headed", "")
+            result.update(certainty)
+            results.append(result)
+    return results
+
+
+@app.get("/v2/")
+async def get_results(q: str, l: int = 15):
+    res = search.knn([q], l)
     results = []
     for sent, hits in res:
         for score, h in hits:
